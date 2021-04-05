@@ -85,8 +85,9 @@ func (v *Vibe) ReadInConfig() error {
 		if nil != err {
 			return err
 		}
-		unifyMap(config)
-		//TODO Add Config
+		desensitizeMap(config)
+
+		mergeMaps(v.config, config)
 	}
 	return nil
 }

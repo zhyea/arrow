@@ -7,16 +7,16 @@ import (
 	"strings"
 )
 
-func unifyMap(m map[string]interface{}) {
+func desensitizeMap(m map[string]interface{}) {
 	for key, val := range m {
 		switch val.(type) {
 		case map[interface{}]interface{}:
 			// nested map: cast and recursively unify
 			val, _ = ToStringMap(val)
-			unifyMap(val.(map[string]interface{}))
+			desensitizeMap(val.(map[string]interface{}))
 		case map[string]interface{}:
 			// nested map: recursively unify
-			unifyMap(val.(map[string]interface{}))
+			desensitizeMap(val.(map[string]interface{}))
 		}
 
 		lower := strings.ToLower(key)
@@ -29,8 +29,7 @@ func unifyMap(m map[string]interface{}) {
 	}
 }
 
-func castToMapStringInterface(
-	src map[interface{}]interface{}) map[string]interface{} {
+func castToMapStringInterface(src map[interface{}]interface{}) map[string]interface{} {
 	tgt := map[string]interface{}{}
 	for k, v := range src {
 		tgt[fmt.Sprintf("%v", k)] = v
@@ -43,62 +42,48 @@ func castToMapStringInterface(
 // instead of using a `string` as the key for nest structures beyond one level
 // deep. Both map types are supported as there is a go-yaml fork that uses
 // `map[string]interface{}` instead.
-func mergeMaps(src, tgt map[string]interface{}, itgt map[interface{}]interface{}) {
-	for sk, sv := range src {
-		tk := keyExists(sk, tgt)
-		if tk == "" {
-			log.Printf("tk=\"\", tgt[%s]=%v", sk, sv)
-			tgt[sk] = sv
-			if itgt != nil {
-				itgt[sk] = sv
-			}
+func mergeMaps(src, target map[string]interface{}) {
+	for srcKey, srcVal := range src {
+		tgtKey := keyExists(srcKey, target)
+		if tgtKey == "" {
+			target[srcKey] = srcVal
 			continue
 		}
 
-		tv, ok := tgt[tk]
+		tgtVal, ok := target[tgtKey]
 		if !ok {
-			log.Printf("tgt[%s] != ok, tgt[%s]=%v", tk, sk, sv)
-			tgt[sk] = sv
-			if itgt != nil {
-				itgt[sk] = sv
-			}
+			target[srcKey] = srcVal
 			continue
 		}
 
-		svType := reflect.TypeOf(sv)
-		tvType := reflect.TypeOf(tv)
+		svType := reflect.TypeOf(srcVal)
+		tvType := reflect.TypeOf(tgtVal)
 		if svType != tvType {
-			log.Printf("svType != tvType; key=%s, st=%v, tt=%v, sv=%v, tv=%v", sk, svType, tvType, sv, tv)
+			log.Printf("svType != tvType; key=%s, st=%v, tt=%v, srcVal=%v, tgtVal=%v", srcKey, svType, tvType, srcVal, tgtVal)
 			continue
 		}
 
-		log.Printf("processing key=%s, st=%v, tt=%v, sv=%v, tv=%v", sk, svType, tvType, sv, tv)
-
-		switch ttv := tv.(type) {
+		switch tgtValType := tgtVal.(type) {
 		case map[interface{}]interface{}:
-			log.Printf("merging maps (must convert)")
-			tsv := sv.(map[interface{}]interface{})
-			ssv := castToMapStringInterface(tsv)
-			stv := castToMapStringInterface(ttv)
-			mergeMaps(ssv, stv, ttv)
+			srcValType := srcVal.(map[interface{}]interface{})
+			ssv := castToMapStringInterface(srcValType)
+			stv := castToMapStringInterface(tgtValType)
+			mergeMaps(ssv, stv)
 		case map[string]interface{}:
 			log.Printf("merging maps")
-			mergeMaps(sv.(map[string]interface{}), ttv, nil)
+			mergeMaps(srcVal.(map[string]interface{}), tgtValType)
 		default:
 			log.Printf("setting value")
-			tgt[tk] = sv
-			if itgt != nil {
-				itgt[tk] = sv
-			}
+			target[tgtKey] = srcVal
 		}
 	}
 }
 
-func keyExists(k string, m map[string]interface{}) string {
-	lk := strings.ToLower(k)
+func keyExists(key string, m map[string]interface{}) string {
+	lowerLey := strings.ToLower(key)
 	for mk := range m {
 		lmk := strings.ToLower(mk)
-		if lmk == lk {
+		if lmk == lowerLey {
 			return mk
 		}
 	}
