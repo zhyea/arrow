@@ -1,9 +1,11 @@
 package vibe
 
 import (
+	"github.com/spf13/cast"
 	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 )
 
@@ -171,11 +173,28 @@ func (v *Vibe) Get(key string) interface{} {
 	return value
 }
 
-// IsSet checks to see if the key has been set in any of the data locations.
+//IsSet checks to see if the key has been set in any of the data locations.
 func IsSet(key string) bool { return v.IsSet(key) }
 
 func (v *Vibe) IsSet(key string) bool {
 	lowerKey := strings.ToLower(key)
 	val := v.find(lowerKey)
 	return val != nil
+}
+
+//Sub returns new Vibe instance representing a sub tree of this instance.
+func Sub(key string) *Vibe { return v.Sub(key) }
+
+func (v *Vibe) Sub(key string) *Vibe {
+	sub := New()
+	data := v.Get(key)
+	if data == nil {
+		return nil
+	}
+
+	if reflect.TypeOf(data).Kind() == reflect.Map {
+		sub.config = cast.ToStringMap(data)
+		return sub
+	}
+	return nil
 }
