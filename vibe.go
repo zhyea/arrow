@@ -44,7 +44,11 @@ func (v *Vibe) AddConfigFiles(in ...string) {
 	v.configFiles = append(v.configFiles, in...)
 }
 
-func (v *Vibe) ReadInConfig() error {
+func ReadConfig() error {
+	return v.ReadConfig()
+}
+
+func (v *Vibe) ReadConfig() error {
 	for _, file := range v.configFiles {
 		config := make(map[string]interface{})
 		err := v.readInConfig(file, &config)
