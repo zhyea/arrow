@@ -8,15 +8,21 @@ type ConfigParseError struct {
 }
 
 // Error returns the formatted configuration error.
-func (pe ConfigParseError) Error() string {
-	return fmt.Sprintf("While parsing config: %s", pe.err.Error())
+func (e ConfigParseError) Error() string {
+	return fmt.Sprintf("While parsing config: %s", e.err.Error())
 }
 
-// UnsupportedConfigError denotes encountering an unsupported
-// configuration filetype.
+// UnsupportedConfigError denotes encountering an unsupported configuration filetype.
 type UnsupportedConfigError string
 
 // Error returns the formatted configuration error.
-func (str UnsupportedConfigError) Error() string {
-	return fmt.Sprintf("Unsupported Config Type %q", string(str))
+func (err UnsupportedConfigError) Error() string {
+	return fmt.Sprintf("Unsupported Config Type %q", string(err))
+}
+
+// ConfigNotFoundError denotes encountering an unsupported
+type ConfigNotFoundError string
+
+func (err ConfigNotFoundError) Error() string {
+	return fmt.Sprintf("Config Not found %q", string(err))
 }

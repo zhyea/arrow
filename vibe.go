@@ -18,10 +18,11 @@ func init() {
 }
 
 type Vibe struct {
+	//key delimiter
 	keyDelimiter string
-	// A set of paths to look for the config file in
+	//path of config files
 	configFiles []string
-
+	//config map
 	config map[string]interface{}
 }
 
@@ -50,6 +51,9 @@ func ReadConfig() error {
 
 func (v *Vibe) ReadConfig() error {
 	for _, file := range v.configFiles {
+		if "" == file {
+			continue
+		}
 		config := make(map[string]interface{})
 		err := v.readInConfig(file, &config)
 		if nil != err {
@@ -165,4 +169,13 @@ func (v *Vibe) Get(key string) interface{} {
 		return nil
 	}
 	return value
+}
+
+// IsSet checks to see if the key has been set in any of the data locations.
+func IsSet(key string) bool { return v.IsSet(key) }
+
+func (v *Vibe) IsSet(key string) bool {
+	lowerKey := strings.ToLower(key)
+	val := v.find(lowerKey)
+	return val != nil
 }
