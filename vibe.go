@@ -3,7 +3,6 @@ package vibe
 import (
 	"github.com/spf13/cast"
 	"gopkg.in/yaml.v3"
-	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -75,7 +74,7 @@ func (v *Vibe) readInConfig(fileName string, config *map[string]interface{}) err
 		return UnsupportedConfigError(ext)
 	}
 
-	file, err := os.ReadFile(fileName)
+	file, err := ReadFile(fileName)
 	if nil != err {
 		return ConfigParseError{err}
 	}
